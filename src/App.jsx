@@ -21,15 +21,15 @@ function App() {
   const { ethereum } = window;
   const buttonColor = connected ? "blue" : "red";
 
-  useEffect(() => {
-    async function connect() {
-      let accounts = await ethereum.request({ method: "eth_requestAccounts" }); 
-      setUserAddress(accounts[0]);
-    }
+  // useEffect(() => {
+  //   async function connect() {
+  //     let accounts = await ethereum.request({ method: "eth_requestAccounts" }); 
+  //     setUserAddress(accounts[0]);
+  //   }
 
-    if (!connected) connect();
+  //   if (!connected) connect();
 
-  }, [connected]);
+  // }, [connected]);
 
   const handleConnect = async () => {
     if (!connected) {
@@ -135,6 +135,7 @@ function App() {
           Get all the ERC-20 token balances of this address:
         </Heading>
         <Input
+          value={userAddress}
           onChange={(e) => setUserAddress(e.target.value)}
           color="black"
           w="600px"
