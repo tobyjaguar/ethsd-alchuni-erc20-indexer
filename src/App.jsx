@@ -10,21 +10,75 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
+  const [connected, setConnected] = useState(false);
   const [userAddress, setUserAddress] = useState('');
   const [results, setResults] = useState([]);
   const [hasQueried, setHasQueried] = useState(false);
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
+  const { ethereum } = window;
+  const buttonColor = connected ? "blue" : "red";
+
+  useEffect(() => {
+    async function connect() {
+      let accounts = await ethereum.request({ method: "eth_requestAccounts" }); 
+      setUserAddress(accounts[0]);
+    }
+
+    if (!connected) connect();
+
+  }, [connected]);
+
+  const handleConnect = async () => {
+    if (!connected) {
+      try {
+        let accounts = await ethereum.request({ 
+          method: 'wallet_requestPermissions',
+          params: [{ eth_accounts: {} }] 
+        });
+        setConnected(!connected);
+      }
+      catch (err) {
+        console.log(err)
+      }
+    } 
+    else {
+      try {
+        await ethereum.request({ 
+          method: "eth_requestAccounts",
+          params: [{ eth_accounts: {} }]
+        });
+        setConnected(!connected);
+      }
+      catch (err) {
+        console.log(err)
+      }
+    }
+  };
+
+  ethereum.on('accountsChanged', (accounts) => {
+    console.log(`running handle change`);
+    setUserAddress(accounts[0]);
+  });
+
+  ethereum.on('chainChanged', (chainId) => {
+    // Handle the new chain.
+    // Correctly handling chain changes can be complicated.
+    // We recommend reloading the page unless you have good reason not to.
+    console.log(`chain id changed, reloading window`);
+    window.location.reload();
+  });
 
   async function getTokenBalance() {
     const config = {
-      apiKey: '<-- COPY-PASTE YOUR ALCHEMY API KEY HERE -->',
+      apiKey: 'rLf11R1wUK-TLREcrH5SzsOz9CrDhobm',
       network: Network.ETH_MAINNET,
     };
 
     const alchemy = new Alchemy(config);
+    console.log(userAddress)
     const data = await alchemy.core.getTokenBalances(userAddress);
 
     setResults(data);
@@ -41,8 +95,21 @@ function App() {
     setTokenDataObjects(await Promise.all(tokenDataPromises));
     setHasQueried(true);
   }
+
+  console.log(userAddress);
+
   return (
     <Box w="100vw">
+      <Flex w="95%" justifyContent="right">
+      <Button 
+        fontSize={15} 
+        onClick={handleConnect} 
+        mt={36} 
+        bgColor={buttonColor}
+      >
+          {connected ? "disconnect" : "connect"}
+      </Button>
+      </Flex>
       <Center>
         <Flex
           alignItems={'center'}
