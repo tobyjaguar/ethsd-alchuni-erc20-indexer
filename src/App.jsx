@@ -78,7 +78,7 @@ function App() {
     };
 
     const alchemy = new Alchemy(config);
-    console.log(userAddress)
+  
     const data = await alchemy.core.getTokenBalances(userAddress);
 
     setResults(data);
@@ -96,8 +96,18 @@ function App() {
     setHasQueried(true);
   }
 
-  console.log(userAddress);
+  function formatBalance(balance, decimals) {
+    let resultBal = Utils.formatUnits(balance,decimals);
+    let split = resultBal.split(".");
+    if (split.length > 1) {
+      let formatDecimals = split[1].length > 4 ? split[1].slice(0, 4 ) + '...' : split[1];
+      resultBal = formatDecimals.length === 1 ? `${split[0]}` : `${split[0]}.${formatDecimals}`;
+    }
+    return resultBal;
+  }
 
+  console.log(`connected address: ${userAddress}`);
+  console.log(Utils)
   return (
     <Box w="100vw">
       <Flex w="95%" justifyContent="right">
@@ -137,6 +147,7 @@ function App() {
         <Input
           value={userAddress}
           onChange={(e) => setUserAddress(e.target.value)}
+          placeholder="0x123....789"
           color="black"
           w="600px"
           textAlign="center"
@@ -156,22 +167,28 @@ function App() {
               return (
                 <Flex
                   flexDir={'column'}
-                  color="white"
-                  bg="blue"
+                  color='white'
+                  bg='#787D91'
                   w={'20vw'}
                   key={e.id}
+                  p={5}
+                  borderRadius='10'
                 >
                   <Box>
                     <b>Symbol:</b> ${tokenDataObjects[i].symbol}&nbsp;
                   </Box>
                   <Box>
                     <b>Balance:</b>&nbsp;
-                    {Utils.formatUnits(
-                      e.tokenBalance,
-                      tokenDataObjects[i].decimals
-                    )}
+                    {formatBalance(e.tokenBalance,tokenDataObjects[i].decimals) }
                   </Box>
-                  <Image src={tokenDataObjects[i].logo} />
+                  <Image 
+                    src={
+                      tokenDataObjects[i].logo 
+                      ? tokenDataObjects[i].logo 
+                      : 'https://smart-piggies-403.s3.us-east-2.amazonaws.com/no%20piggy.avif'
+                    } 
+                    width='25%' 
+                  />
                 </Flex>
               );
             })}
