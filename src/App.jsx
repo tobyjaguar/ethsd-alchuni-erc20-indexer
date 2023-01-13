@@ -8,28 +8,33 @@ import {
   Input,
   SimpleGrid,
   Text,
+  Link,
+  Spinner,
 } from '@chakra-ui/react';
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
 import { useState, useEffect } from 'react';
+
+const ETHERSCAN = `https://etherscan.io/address/`;
 
 function App() {
   const [connected, setConnected] = useState(false);
   const [userAddress, setUserAddress] = useState('');
   const [results, setResults] = useState([]);
   const [hasQueried, setHasQueried] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(false);
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
   const { ethereum } = window;
   const buttonColor = connected ? "blue" : "red";
 
-  // useEffect(() => {
-  //   async function connect() {
-  //     let accounts = await ethereum.request({ method: "eth_requestAccounts" }); 
-  //     setUserAddress(accounts[0]);
-  //   }
+  useEffect(() => {
+    async function connect() {
+      let accounts = await ethereum.request({ method: "eth_requestAccounts" }); 
+      setUserAddress(accounts[0]);
+    }
 
-  //   if (!connected) connect();
+    if (connected) connect();
 
-  // }, [connected]);
+  }, [connected]);
 
   const handleConnect = async () => {
     if (!connected) {
@@ -51,6 +56,9 @@ function App() {
           params: [{ eth_accounts: {} }]
         });
         setConnected(!connected);
+        setUserAddress("");
+        setHasQueried(false);
+        setResults([]);
       }
       catch (err) {
         console.log(err)
@@ -72,6 +80,10 @@ function App() {
   });
 
   async function getTokenBalance() {
+    setHasQueried(false);
+    setResults([]);
+    setShowSpinner(true);
+
     const config = {
       apiKey: 'rLf11R1wUK-TLREcrH5SzsOz9CrDhobm',
       network: Network.ETH_MAINNET,
@@ -93,6 +105,7 @@ function App() {
     }
 
     setTokenDataObjects(await Promise.all(tokenDataPromises));
+    setShowSpinner(false);
     setHasQueried(true);
   }
 
@@ -106,8 +119,10 @@ function App() {
     return resultBal;
   }
 
-  console.log(`connected address: ${userAddress}`);
-  console.log(Utils)
+  let pmsg = connected ? `connected address: ${userAddress}` : `not connected`;
+
+  console.log(pmsg);
+console.log(showSpinner)  
   return (
     <Box w="100vw">
       <Flex w="95%" justifyContent="right">
@@ -120,6 +135,7 @@ function App() {
           {connected ? "disconnect" : "connect"}
       </Button>
       </Flex>
+  
       <Center>
         <Flex
           alignItems={'center'}
@@ -159,43 +175,51 @@ function App() {
           Check ERC-20 Token Balances
         </Button>
 
-        <Heading my={36}>ERC-20 token balances:</Heading>
+        {showSpinner && 
+          <div>
+            <br/>
+            <Spinner boxSize={24}/>
+          </div>
+        }
+        
+        {hasQueried &&   
+          <div>
+            <Heading my={36}>ERC-20 token balances:</Heading>
 
-        {hasQueried ? (
-          <SimpleGrid w={'90vw'} columns={4} spacing={24}>
-            {results.tokenBalances.map((e, i) => {
-              return (
-                <Flex
-                  flexDir={'column'}
-                  color='white'
-                  bg='#787D91'
-                  w={'20vw'}
-                  key={e.id}
-                  p={5}
-                  borderRadius='10'
-                >
-                  <Box>
-                    <b>Symbol:</b> ${tokenDataObjects[i].symbol}&nbsp;
-                  </Box>
-                  <Box>
-                    <b>Balance:</b>&nbsp;
-                    {formatBalance(e.tokenBalance,tokenDataObjects[i].decimals) }
-                  </Box>
-                  <Image 
-                    src={
-                      tokenDataObjects[i].logo 
-                      ? tokenDataObjects[i].logo 
-                      : 'https://smart-piggies-403.s3.us-east-2.amazonaws.com/no%20piggy.avif'
-                    } 
-                    width='25%' 
-                  />
-                </Flex>
-              );
-            })}
-          </SimpleGrid>
-        ) : (
-          'Please make a query! This may take a few seconds...'
-        )}
+            <SimpleGrid w={'90vw'} columns={4} spacing={24}>
+              {results.tokenBalances.map((e, i) => {
+                return (
+                  <Link href={`${ETHERSCAN}${e.contractAddress}`} isExternal>
+                  <Flex
+                    flexDir={'column'}
+                    color='white'
+                    bg='#787D91'
+                    w={'20vw'}
+                    key={i}
+                    p={5}
+                    borderRadius='10'
+                  >
+                    <Box>
+                      <b>Symbol:</b> ${tokenDataObjects[i].symbol}&nbsp;
+                    </Box>
+                    <Box>
+                      <b>Balance:</b>&nbsp;
+                      {formatBalance(e.tokenBalance,tokenDataObjects[i].decimals) }
+                    </Box>
+                    <Image 
+                      src={
+                        tokenDataObjects[i].logo 
+                        ? tokenDataObjects[i].logo 
+                        : 'https://smart-piggies-403.s3.us-east-2.amazonaws.com/no%20piggy.avif'
+                      } 
+                      width='25%' 
+                    />
+                  </Flex>
+                  </Link>
+                );
+              })}
+            </SimpleGrid>
+          </div>}
       </Flex>
     </Box>
   );
