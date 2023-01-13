@@ -14,6 +14,7 @@ import {
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
 import { useState, useEffect } from 'react';
 
+const { VITE_API_KEY } = import.meta.env;
 const ETHERSCAN = `https://etherscan.io/address/`;
 
 function App() {
@@ -85,7 +86,7 @@ function App() {
     setShowSpinner(true);
 
     const config = {
-      apiKey: 'rLf11R1wUK-TLREcrH5SzsOz9CrDhobm',
+      apiKey: VITE_API_KEY,
       network: Network.ETH_MAINNET,
     };
 
@@ -122,7 +123,7 @@ function App() {
   let pmsg = connected ? `connected address: ${userAddress}` : `not connected`;
 
   console.log(pmsg);
-console.log(showSpinner)  
+
   return (
     <Box w="100vw">
       <Flex w="95%" justifyContent="right">
