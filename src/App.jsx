@@ -190,6 +190,7 @@ function App() {
             <SimpleGrid w={'90vw'} columns={4} spacing={24}>
               {results.tokenBalances.map((e, i) => {
                 return (
+                  <div key={i.contractAddress}>
                   <Link href={`${ETHERSCAN}${e.contractAddress}`} isExternal>
                   <Flex
                     flexDir={'column'}
@@ -217,6 +218,7 @@ function App() {
                     />
                   </Flex>
                   </Link>
+                  </div>
                 );
               })}
             </SimpleGrid>
